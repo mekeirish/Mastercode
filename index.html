@@ -8,7 +8,7 @@
         :root { 
             --bg: #1a1c20; --card-bg: #23272d; --shadow: #121417; 
             --light: #2e333a; --accent: #4b6cb7; --text: #e0e0e0;
-            --danger: #ff5f56; --success: #27ae60;
+            --danger: #ff5f56; --success: #27ae60; --warning: #f1c40f;
         }
         body { 
             font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); 
@@ -26,13 +26,36 @@
             box-sizing: border-box; outline: none; font-size: 1rem;
         }
         .btn-view { padding: 0 15px; border-radius: 12px; border: none; background: var(--card-bg); color: var(--accent); box-shadow: 4px 4px 8px var(--shadow), -2px -2px 6px var(--light); cursor: pointer; font-weight: bold; font-size: 0.7rem; }
+        
         .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--card-bg); box-shadow: 6px 6px 12px var(--shadow), -4px -4px 10px var(--light); cursor: pointer; font-weight: bold; color: var(--accent); margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 12px; }
         .btn:active { transform: scale(0.98); box-shadow: inset 4px 4px 8px var(--shadow); }
         .btn-danger { color: var(--danger); font-size: 0.7rem; margin-top: 15px; background: transparent; border:none; width: 100%; cursor: pointer; opacity: 0.6; }
+        
+        .btn-live { 
+            width: 100%; padding: 16px; border: 2px solid var(--warning); border-radius: 16px; 
+            background: transparent; color: var(--warning); font-weight: bold; cursor: pointer; 
+            margin-top: 15px; display: none; justify-content: center; align-items: center; gap: 12px; 
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-live:hover { background: rgba(241, 196, 15, 0.1); }
+        .btn-live:active { transform: scale(0.98); }
+        
+        .led-container { display: flex; gap: 8px; }
+        .led { width: 10px; height: 10px; border-radius: 50%; background-color: #555; transition: 0.3s; }
+        .led-yellow { background-color: var(--warning); box-shadow: 0 0 10px var(--warning); animation: pulse-yellow 1s infinite; }
+        .led-green { background-color: var(--success); box-shadow: 0 0 10px var(--success); animation: none; }
+        .led-red { background-color: var(--danger); box-shadow: 0 0 10px var(--danger); animation: none; }
+
+        @keyframes pulse-yellow {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(241, 196, 15, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); }
+        }
+
         #status { margin-top: 25px; font-size: 0.75rem; padding: 18px; border-radius: 15px; display: none; background: #16181c; color: #888; font-family: monospace; border: 1px solid #2e333a; white-space: pre-wrap; line-height: 1.5; }
         #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--card-bg); color: var(--success); padding: 15px 30px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); font-weight: bold; z-index: 1000; transition: top 0.4s; border: 1px solid var(--success); }
         .signature { margin-top: 50px; font-size: 0.7rem; color: #444; letter-spacing: 1.5px; text-align: center; width: 100%; }
-        .preview-icon { width: 70px; height: 70px; margin: 15px auto; border-radius: 18px; border: 2px solid var(--light); display: none; object-fit: cover; }
+        .preview-icon { width: 80px; height: 80px; margin: 15px auto; border-radius: 18px; border: 2px solid var(--light); display: none; object-fit: cover; box-shadow: 4px 4px 10px var(--shadow); }
         .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -63,7 +86,7 @@
         <label style="margin-top:20px;">Code HTML Source</label>
         <textarea id="htmlInput" rows="8" placeholder="Colle le code ici..."></textarea>
         
-        <label style="margin-top:20px;">Icône PWA</label>
+        <label style="margin-top:20px;">Icône PWA (Tous formats acceptés)</label>
         <input type="file" id="iconInput" accept="image/*" onchange="previewIcon(this)">
         <img id="iconPreview" class="preview-icon">
     </div>
@@ -71,6 +94,14 @@
     <button class="btn" onclick="generatePWA()" id="mainBtn">
         <div class="spinner" id="loader"></div>
         <span>FORGER L'APPLICATION</span>
+    </button>
+
+    <button class="btn-live" id="liveBtn" onclick="openLiveSite()">
+        <div class="led-container">
+            <div class="led" id="led1"></div>
+            <div class="led" id="led2"></div>
+        </div>
+        <span>VOIR LE SITE LIVE</span>
     </button>
 
     <div id="status"></div>
@@ -84,6 +115,10 @@
 <script>
     const saveKey = (id, val) => localStorage.setItem(id, val);
     document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
+
+    let liveOwner = "";
+    let liveRepo = "";
+    let deploymentInterval = null;
 
     function toggleView(id) {
         const el = document.getElementById(id);
@@ -114,11 +149,31 @@
                 img.onload = function() {
                     const canvas = document.getElementById('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = 512; canvas.height = 512;
-                    ctx.drawImage(img, 0, 0, 512, 512);
-                    base64Icon = canvas.toDataURL('image/png').split(',')[1];
-                    document.getElementById('iconPreview').src = canvas.toDataURL('image/png');
-                    document.getElementById('iconPreview').style.display = 'block';
+                    
+                    canvas.width = 512; 
+                    canvas.height = 512;
+                    
+                    // Logique avancée de rognage carré automatique (Smart Crop)
+                    let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
+                    if (img.width > img.height) {
+                        sourceWidth = img.height;
+                        sourceX = (img.width - img.height) / 2;
+                    } else if (img.height > img.width) {
+                        sourceHeight = img.width;
+                        sourceY = (img.height - img.width) / 2;
+                    }
+                    
+                    // Nettoyage préalable et dessin propre
+                    ctx.clearRect(0, 0, 512, 512);
+                    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 512, 512);
+                    
+                    // Conversion stricte en PNG natif
+                    const dataUrl = canvas.toDataURL('image/png');
+                    base64Icon = dataUrl.split(',')[1];
+                    
+                    const preview = document.getElementById('iconPreview');
+                    preview.src = dataUrl;
+                    preview.style.display = 'block';
                 }
                 img.src = e.target.result;
             }
@@ -138,6 +193,46 @@
         showToast("Rapport copié !");
     }
 
+    async function checkDeploymentStatus() {
+        const ghToken = document.getElementById('ghToken').value;
+        if (!liveOwner || !liveRepo || !ghToken) return;
+
+        try {
+            const res = await fetch(`https://api.github.com/repos/${liveOwner}/${liveRepo}/actions/runs?per_page=1`, {
+                headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github+json' }
+            });
+            if (!res.ok) return;
+            
+            const data = await res.json();
+            if (data.workflow_runs && data.workflow_runs.length > 0) {
+                const run = data.workflow_runs[0];
+                const l1 = document.getElementById('led1');
+                const l2 = document.getElementById('led2');
+                
+                l1.className = 'led'; l2.className = 'led';
+
+                if (run.status === 'in_progress' || run.status === 'queued') {
+                    l1.classList.add('led-yellow'); l2.classList.add('led-yellow');
+                } else if (run.status === 'completed') {
+                    if (run.conclusion === 'success') {
+                        l1.classList.add('led-green'); l2.classList.add('led-green');
+                    } else {
+                        l1.classList.add('led-red'); l2.classList.add('led-red');
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Erreur statut Live :", err);
+        }
+    }
+
+    function openLiveSite() {
+        if (liveOwner && liveRepo) {
+            const cleanOwner = liveOwner.toLowerCase();
+            window.open(`https://${cleanOwner}.github.io/${liveRepo}/`, '_blank');
+        }
+    }
+
     async function generatePWA() {
         const ghToken = document.getElementById('ghToken').value;
         const appName = document.getElementById('appName').value.trim().replace(/\s+/g, '-');
@@ -148,7 +243,10 @@
         if (!ghToken || !appName || !htmlInputContent || !base64Icon) return showToast("⚠️ Données manquantes", true);
 
         btn.disabled = true; loader.style.display = 'block';
-        updateStatus("--- SEQUENCE MASTERCODE 2.7 ACTIVÉE ---", true);
+        document.getElementById('liveBtn').style.display = 'none';
+        if (deploymentInterval) clearInterval(deploymentInterval);
+        
+        updateStatus("--- SEQUENCE MASTERCODE 2.9 ACTIVÉE ---", true);
 
         try {
             const userRes = await fetch('https://api.github.com/user', { headers: { 'Authorization': `token ${ghToken}` } });
@@ -168,7 +266,6 @@
 
             updateStatus("Injection du moteur PWA...");
             
-            // ASTUCE ANTI-CONFLIT : On fragmente les balises HTML pour l'auto-forge
             const tagS = '<' + 'script' + '>';
             const tagE = '<' + '/' + 'script' + '>';
             const headE = '<' + '/' + 'head' + '>';
@@ -190,10 +287,20 @@
                 finalHtml += swReg;
             }
 
+            // Manifeste mis à jour avec critères d'installabilité optimisés
             const manifest = JSON.stringify({
-                "name": appName, "short_name": appName, "start_url": "./index.html",
-                "display": "standalone", "background_color": "#1a1c20", "theme_color": "#4b6cb7",
-                "icons": [{"src": "icon.png", "sizes": "512x512", "type": "image/png"}]
+                "name": appName, 
+                "short_name": appName, 
+                "start_url": "./index.html",
+                "display": "standalone", 
+                "background_color": "#1a1c20", 
+                "theme_color": "#4b6cb7",
+                "icons": [{
+                    "src": "icon.png", 
+                    "sizes": "512x512", 
+                    "type": "image/png",
+                    "purpose": "any maskable"
+                }]
             }, null, 2);
 
             const sw = `const cacheName='${appName}-v1'; self.addEventListener('install',e=>{e.waitUntil(caches.open(cacheName).then(c=>c.addAll(['./index.html','./manifest.json','./icon.png'])));}); self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
@@ -230,6 +337,17 @@
 
             updateStatus("Opération terminée avec succès.");
             showToast("✅ Mastercode : Forgé !");
+            
+            liveOwner = owner;
+            liveRepo = appName;
+            
+            document.getElementById('led1').className = 'led led-yellow';
+            document.getElementById('led2').className = 'led led-yellow';
+            document.getElementById('liveBtn').style.display = 'flex';
+            
+            checkDeploymentStatus();
+            deploymentInterval = setInterval(checkDeploymentStatus, 4000);
+
         } catch (err) {
             updateStatus("❌ ERREUR : " + err.message);
             showToast("Échec de la forge", true);
