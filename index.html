@@ -25,7 +25,7 @@
             background: #1e2126; color: #fff; box-shadow: inset 4px 4px 8px var(--shadow), inset -2px -2px 6px var(--light); 
             box-sizing: border-box; outline: none; font-size: 1rem;
         }
-        .btn-view { padding: 0 15px; border-radius: 12px; border: none; background: var(--card-bg); color: var(--accent); box-shadow: 4px 4px 8px var(--shadow), -2px -2px 6px var(--light); cursor: pointer; font-weight: bold; font-size: 0.7rem; }
+        .btn-view { padding: 0 15px; border-radius: 12px; border: none; background: var(--card-bg); color: var(--accent); box-shadow: 4px 4px 8px var(--shadow), -2px -2px 6px var(--light); cursor: pointer; font-weight: bold; font-size: 0.7rem; white-space: nowrap; }
         
         .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--card-bg); box-shadow: 6px 6px 12px var(--shadow), -4px -4px 10px var(--light); cursor: pointer; font-weight: bold; color: var(--accent); margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 12px; }
         .btn:active { transform: scale(0.98); box-shadow: inset 4px 4px 8px var(--shadow); }
@@ -62,6 +62,9 @@
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4b6cb7">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4b6cb7">
 <link rel="apple-touch-icon" href="icon.png"></head>
 <body>
 
@@ -75,6 +78,7 @@
         <div class="token-row">
             <input type="password" id="ghToken" placeholder="ghp_..." oninput="saveKey('ghToken', this.value)">
             <button class="btn-view" onclick="toggleView('ghToken')">VOIR</button>
+            <button class="btn-view" onclick="pasteToken()">COLLER</button>
         </div>
         <button class="btn-danger" onclick="clearAllData()">🗑️ EFFACER LES CLÉS</button>
     </div>
@@ -127,6 +131,18 @@
         else { el.type = "password"; btn.innerText = "VOIR"; }
     }
 
+    async function pasteToken() {
+        try {
+            const text = await navigator.clipboard.readText();
+            const el = document.getElementById('ghToken');
+            el.value = text;
+            saveKey('ghToken', text);
+            showToast("📋 Token collé !");
+        } catch (err) {
+            showToast("⚠️ Accès au presse-papiers refusé", true);
+        }
+    }
+
     function showToast(msg, isError = false) {
         const t = document.getElementById('toast');
         t.innerText = msg;
@@ -153,7 +169,6 @@
                     canvas.width = 512; 
                     canvas.height = 512;
                     
-                    // Logique avancée de rognage carré automatique (Smart Crop)
                     let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
                     if (img.width > img.height) {
                         sourceWidth = img.height;
@@ -163,11 +178,9 @@
                         sourceY = (img.height - img.width) / 2;
                     }
                     
-                    // Nettoyage préalable et dessin propre
                     ctx.clearRect(0, 0, 512, 512);
                     ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 512, 512);
                     
-                    // Conversion stricte en PNG natif
                     const dataUrl = canvas.toDataURL('image/png');
                     base64Icon = dataUrl.split(',')[1];
                     
@@ -287,7 +300,6 @@
                 finalHtml += swReg;
             }
 
-            // Manifeste mis à jour avec critères d'installabilité optimisés
             const manifest = JSON.stringify({
                 "name": appName, 
                 "short_name": appName, 
@@ -356,6 +368,8 @@
         }
     }
 </script>
+
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
 </body>
