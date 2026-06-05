@@ -149,9 +149,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon.png">
 
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#4b6cb7">
-<link rel="apple-touch-icon" href="icon.png"></head>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon.png">
+</head>
 <body>
 
 <div id="toast">✅ Action Réussie</div>
@@ -365,9 +369,7 @@
                 doc.documentElement.insertAdjacentHTML('afterbegin', '<head>' + headElements + '</head>');
             }
 
-            // Insertion avant 
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
-</body>
+            // Insertion avant </body>
             if (doc.body) {
                 doc.body.insertAdjacentHTML('beforeend', swScript);
             } else {
@@ -706,6 +708,16 @@
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
 
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker enregistré !'))
+        .catch(err => console.error('Erreur SW :', err));
+    });
+  }
+</script>
 
 <script>
   if ('serviceWorker' in navigator) {
