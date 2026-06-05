@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+<html lang="fr"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mastercode - Premium PWA Factory</title>
@@ -15,7 +13,7 @@
             margin: 0; padding: 20px; color: var(--text); display: flex; 
             flex-direction: column; align-items: center; min-height: 100vh;
         }
-        .container { width: 100%; max-width: 500px; padding-bottom: 50px; }
+        .container { width: 100%; max-width: 500px; padding-bottom: 50px; position: relative; }
         h1 { text-align: center; font-size: 1.6rem; font-weight: 300; letter-spacing: 4px; color: #fff; margin-bottom: 30px; text-transform: uppercase; }
         .card { background: var(--card-bg); padding: 22px; border-radius: 24px; box-shadow: 10px 10px 20px var(--shadow), -5px -5px 15px var(--light); margin-bottom: 25px; }
         label { display: block; margin: 0 0 10px 5px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
@@ -58,11 +56,99 @@
         .preview-icon { width: 80px; height: 80px; margin: 15px auto; border-radius: 18px; border: 2px solid var(--light); display: none; object-fit: cover; box-shadow: 4px 4px 10px var(--shadow); }
         .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* STYLES POUR LA MODALE SW */
+        #sw-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-bg);
+            border: 2px solid var(--warning);
+            border-radius: 24px;
+            padding: 20px;
+            z-index: 10001;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        #sw-modal textarea {
+            width: 100%;
+            height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            background: #1e2126;
+            color: #eee;
+            border: 1px solid #444;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 12px;
+        }
+        #sw-modal h3 {
+            margin-top: 0;
+            color: var(--warning);
+        }
+        .sw-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .sw-buttons button {
+            background: var(--accent);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+        .sw-buttons button.reset {
+            background: var(--danger);
+        }
+        #sw-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+        }
+        .sw-btn-icon {
+            background: var(--card-bg);
+            border: none;
+            font-size: 1.4rem;
+            padding: 8px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-left: 10px;
+            box-shadow: 4px 4px 8px var(--shadow), -2px -2px 6px var(--light);
+        }
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
     </style>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4b6cb7">
 <link rel="apple-touch-icon" href="icon.png">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4b6cb7">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="./manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4b6cb7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon.png">
+
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4b6cb7">
 <link rel="apple-touch-icon" href="icon.png"></head>
@@ -71,7 +157,10 @@
 <div id="toast">✅ Action Réussie</div>
 
 <div class="container">
-    <h1>Mastercode</h1>
+    <div class="header-row">
+        <h1>Mastercode</h1>
+        <button class="sw-btn-icon" onclick="openSwModal()" title="Script personnalisé (SW)">🧠 SW</button>
+    </div>
 
     <div class="card">
         <label>GitHub Access Token</label>
@@ -100,6 +189,11 @@
         <span>FORGER L'APPLICATION</span>
     </button>
 
+    <!-- NOUVEAU BOUTON : INJECTER PWA DANS index.html (texte modifié) -->
+    <button class="btn" onclick="injectPwaToGitHub()" id="injectBtn">
+        <span>Yes, WE Can.</span>
+    </button>
+
     <button class="btn-live" id="liveBtn" onclick="openLiveSite()">
         <div class="led-container">
             <div class="led" id="led1"></div>
@@ -114,9 +208,241 @@
     <div class="signature">Made by Laiche Brahim 2026 Paris</div>
 </div>
 
+<!-- MODALE SW (SCRIPT PERSONNALISÉ) -->
+<div id="sw-overlay"></div>
+<div id="sw-modal">
+    <h3>✍️ Script personnalisé (JavaScript)</h3>
+    <p style="font-size:0.75rem; color:#aaa;">Ce code sera injecté à la fin du &lt;body&gt;. Il peut surcharger les fonctions existantes ou ajouter des fonctionnalités (notifications push, etc.).</p>
+    <textarea id="customScript" placeholder="// Collez votre code JS ici...
+// Exemple :
+// window.showBrowserNotification = function(title, body, tag) { ... }
+// console.log('Mon script personnalisé !');"></textarea>
+    <div class="sw-buttons">
+        <button class="reset" onclick="resetCustomScript()">🗑️ Réinitialiser</button>
+        <button onclick="saveCustomScript()">💾 Sauvegarder</button>
+        <button onclick="closeSwModal()">Fermer</button>
+    </div>
+</div>
+
 <canvas id="canvas" style="display:none;"></canvas>
 
 <script>
+    // ---------- GESTION DU SCRIPT PERSONNALISÉ (SW) ----------
+    const CUSTOM_SCRIPT_KEY = 'mastercode_custom_script';
+
+    function loadCustomScriptFromStorage() {
+        const saved = localStorage.getItem(CUSTOM_SCRIPT_KEY);
+        if (saved) {
+            document.getElementById('customScript').value = saved;
+        }
+    }
+
+    function saveCustomScript() {
+        const script = document.getElementById('customScript').value;
+        localStorage.setItem(CUSTOM_SCRIPT_KEY, script);
+        showToast("✅ Script personnalisé sauvegardé !");
+        closeSwModal();
+    }
+
+    function resetCustomScript() {
+        if (confirm("Supprimer définitivement votre script personnalisé ?")) {
+            localStorage.removeItem(CUSTOM_SCRIPT_KEY);
+            document.getElementById('customScript').value = '';
+            showToast("Script personnalisé réinitialisé.");
+            closeSwModal();
+        }
+    }
+
+    function openSwModal() {
+        loadCustomScriptFromStorage();
+        document.getElementById('sw-modal').style.display = 'block';
+        document.getElementById('sw-overlay').style.display = 'block';
+    }
+
+    function closeSwModal() {
+        document.getElementById('sw-modal').style.display = 'none';
+        document.getElementById('sw-overlay').style.display = 'none';
+    }
+
+    // ---------- FONCTION D'INJECTION PWA SUR GITHUB (CORRIGÉE) ----------
+    async function injectPwaToGitHub() {
+        const ghToken = document.getElementById('ghToken').value;
+        const appName = document.getElementById('appName').value.trim().replace(/\s+/g, '-');
+        const sourceHtml = document.getElementById('htmlInput').value.trim();
+
+        if (!ghToken) {
+            showToast("❌ Token GitHub manquant", true);
+            return;
+        }
+        if (!appName) {
+            showToast("❌ Nom du projet manquant", true);
+            return;
+        }
+        if (!sourceHtml) {
+            showToast("❌ Code HTML source vide. Collez d'abord votre HTML dans le champ prévu.", true);
+            return;
+        }
+
+        // Récupérer le propriétaire (login) depuis le token
+        let owner = "";
+        try {
+            const userRes = await fetch('https://api.github.com/user', {
+                headers: { 'Authorization': `token ${ghToken}` }
+            });
+            if (!userRes.ok) throw new Error("Token invalide");
+            const userData = await userRes.json();
+            owner = userData.login;
+        } catch (err) {
+            showToast("❌ Impossible de vérifier le token GitHub", true);
+            return;
+        }
+
+        const repo = appName;
+        const path = 'index.html';
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+        // Headers pour l'API GitHub
+        const headers = {
+            'Authorization': `token ${ghToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+        };
+
+        // Afficher le bouton live et mettre les LED en jaune (travail en cours)
+        const liveBtn = document.getElementById('liveBtn');
+        const led1 = document.getElementById('led1');
+        const led2 = document.getElementById('led2');
+        liveOwner = owner;
+        liveRepo = repo;
+        liveBtn.style.display = 'flex';
+        led1.className = 'led led-yellow';
+        led2.className = 'led led-yellow';
+        let checkInterval = null;
+
+        try {
+            // 1. Récupérer le SHA du fichier distant (indispensable pour la mise à jour)
+            updateStatus("🔍 Récupération des infos du fichier distant...", false);
+            const getResp = await fetch(url, { headers });
+            let sha = null;
+            if (getResp.status === 200) {
+                const fileData = await getResp.json();
+                sha = fileData.sha;
+            } else if (getResp.status !== 404) {
+                throw new Error(`Impossible d'accéder au fichier (${getResp.status})`);
+            }
+            // Si le fichier n'existe pas (404), on pourra le créer (PUT sans sha)
+
+            // 2. Injecter les balises PWA dans le code HTML source (local)
+            const headElements = `
+<link rel="manifest" href="./manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4b6cb7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon.png">
+`;
+
+            const swScript = `
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker enregistré !'))
+        .catch(err => console.error('Erreur SW :', err));
+    });
+  }
+<\/script>
+`;
+
+            // Utiliser DOMParser pour une injection propre
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(sourceHtml, 'text/html');
+
+            // Insertion dans <head>
+            if (doc.head) {
+                doc.head.insertAdjacentHTML('beforeend', headElements);
+            } else {
+                doc.documentElement.insertAdjacentHTML('afterbegin', '<head>' + headElements + '</head>');
+            }
+
+            // Insertion avant 
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
+</body>
+            if (doc.body) {
+                doc.body.insertAdjacentHTML('beforeend', swScript);
+            } else {
+                doc.documentElement.insertAdjacentHTML('beforeend', '<body>' + swScript + '</body>');
+            }
+
+            // Reconstruire la chaîne HTML complète
+            let updatedHtml = doc.documentElement.outerHTML;
+            if (!sourceHtml.toLowerCase().includes('<!doctype html>')) {
+                updatedHtml = '<!DOCTYPE html>\n' + updatedHtml;
+            }
+
+            // 3. Encoder en Base64 (UTF-8 sûr)
+            const encodedContent = btoa(unescape(encodeURIComponent(updatedHtml)));
+
+            // 4. Envoyer la mise à jour (création ou modification) à GitHub
+            updateStatus("📤 Injection des balises PWA et envoi à GitHub...", false);
+            const putBody = {
+                message: "feat(pwa): injection auto des balises manifest + service worker via Mastercode",
+                content: encodedContent
+            };
+            if (sha) putBody.sha = sha;
+
+            const putResp = await fetch(url, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(putBody)
+            });
+
+            if (!putResp.ok) {
+                const errData = await putResp.json();
+                throw new Error(errData.message || "Échec de l'upload");
+            }
+
+            updateStatus("✅ index.html mis à jour avec succès sur GitHub !", false);
+            showToast("✅ Injection PWA terminée !");
+
+            // 5. Vérifier que le site est déployé (GitHub Pages)
+            const siteUrl = `https://${owner.toLowerCase()}.github.io/${repo}/`;
+            updateStatus(`🌐 Attente du déploiement sur ${siteUrl}...`, false);
+            
+            let attempts = 0;
+            const maxAttempts = 40; // ~ 2 minutes (3s * 40 = 120s)
+            checkInterval = setInterval(async () => {
+                attempts++;
+                try {
+                    const testResp = await fetch(siteUrl, { method: 'HEAD', mode: 'no-cors' });
+                    // En mode no-cors, la promesse résout même si la réponse est opaque
+                    // On considère que c'est réussi si on n'a pas d'erreur réseau
+                    clearInterval(checkInterval);
+                    led1.className = 'led led-green';
+                    led2.className = 'led led-green';
+                    updateStatus("✅ Site prêt et accessible !", false);
+                    showToast("🌍 Site disponible !");
+                } catch (err) {
+                    if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        led1.className = 'led led-green';
+                        led2.className = 'led led-green';
+                        updateStatus("⚠️ Délai d'attente dépassé, mais le site devrait bientôt être disponible.", false);
+                    }
+                }
+            }, 3000);
+
+        } catch (err) {
+            console.error(err);
+            updateStatus(`❌ Erreur : ${err.message}`, false);
+            showToast(`❌ Échec : ${err.message}`, true);
+            led1.className = 'led led-red';
+            led2.className = 'led led-red';
+            if (checkInterval) clearInterval(checkInterval);
+        }
+    }
+
+    // ---------- RESTE DE L'APPLICATION (inchangé) ----------
     const saveKey = (id, val) => localStorage.setItem(id, val);
     document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
 
@@ -294,11 +620,20 @@
                 finalHtml = `<head>${pwaTags}</head>` + finalHtml;
             }
             
-            if (finalHtml.toLowerCase().includes(bodyE)) {
-                finalHtml = finalHtml.replace(new RegExp(bodyE, 'i'), `${swReg}${bodyE}`);
-            } else {
-                finalHtml += swReg;
+            // ==== INJECTION DU SCRIPT PERSONNALISÉ (SW) ====
+            const customScriptRaw = localStorage.getItem(CUSTOM_SCRIPT_KEY);
+            let customScriptBlock = '';
+            if (customScriptRaw && customScriptRaw.trim() !== '') {
+                customScriptBlock = `\n<!-- Custom script injected by Mastercode -->\n${tagS}\n${customScriptRaw}\n${tagE}\n`;
+                updateStatus("Script personnalisé détecté, injection en cours...");
             }
+            
+            if (finalHtml.toLowerCase().includes(bodyE)) {
+                finalHtml = finalHtml.replace(new RegExp(bodyE, 'i'), `${customScriptBlock}${swReg}${bodyE}`);
+            } else {
+                finalHtml += `${customScriptBlock}${swReg}`;
+            }
+            // ==================================================
 
             const manifest = JSON.stringify({
                 "name": appName, 
@@ -371,6 +706,14 @@
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
 
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
-</body>
-</html>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker enregistré !'))
+        .catch(err => console.error('Erreur SW :', err));
+    });
+  }
+</script>
+</body></html>
